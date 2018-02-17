@@ -1,15 +1,24 @@
-import React, { Component } from 'react';
-import { fire, loginWithGithub, signOut } from './firebase'
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from 'react'
+import { BrowserRouter as Router } from 'react-router-dom'
+import { fire, loginWithGithub, signOut } from './helpers/firebase'
+import { ProtectedRoute, PublicRoute } from './helpers/GuardRoute'
+
+import { Login } from './containers/Login'
+import { Home } from './containers/Home'
 
 class App extends Component {
+  constructor(props) {
+    super(props)
+
+    this.signIn = this.signIn.bind(this)
+  }
   state = {
     accessToken: null,
     githubUser: null
   }
 
   signIn() {
+    console.log('logging in')
     loginWithGithub(fire)
       .then(res => {
         console.log(res)
@@ -49,19 +58,14 @@ class App extends Component {
 
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a onClick={() => this.signIn()} > Login com Github</a>
-        <a onClick={() => this.signOut()} > Signout com Github</a>
-      </div>
+      <Router>
+        <div className="App">
+          <ProtectedRoute path='/' Component={Home} {...this.state} exact={true} />
+          <PublicRoute path="/login" Component={Login} {...this.state} loginHandler={this.signIn} />
+        </div>
+      </Router>
     );
   }
 }
 
-export default App;
+export default App
