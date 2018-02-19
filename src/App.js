@@ -1,17 +1,24 @@
 import React, { Component } from 'react'
-import { BrowserRouter as Router } from 'react-router-dom'
+import { BrowserRouter as Router, Switch } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
+
 import { fire, loginWithGithub, signOut } from './helpers/firebase'
 import { ProtectedRoute, PublicRoute } from './helpers/GuardRoute'
 
 import { Login } from './containers/Login'
 import { Home } from './containers/Home'
+import { RepoIssues } from './containers/RepoIssues'
+import { IssueDetails } from './containers/IssueDetails'
+import { IssueForm } from './containers/IssueForm'
 
-class App extends Component {
+export class App extends Component {
   constructor(props) {
     super(props)
 
     this.signIn = this.signIn.bind(this)
+    this.signOut = this.signOut.bind(this)
   }
+
   state = {
     accessToken: null,
     githubUser: null
@@ -26,6 +33,7 @@ class App extends Component {
           accessToken: res.credential.accessToken,
           githubUser: res.additionalUserInfo.username,
         }
+        localStorage.setItem('accessToken', state.accessToken)
         fire.database().ref(`users/${res.user.uid}`).set(state)
         this.setState(state)
       })
@@ -60,12 +68,17 @@ class App extends Component {
     return (
       <Router>
         <div className="App">
-          <ProtectedRoute path='/' Component={Home} {...this.state} exact={true} />
-          <PublicRoute path="/login" Component={Login} {...this.state} loginHandler={this.signIn} />
+          <Switch>
+            <ProtectedRoute path='/' Component={Home} {...this.state} logoutHandler={this.signOut} exact={true} />
+            <ProtectedRoute path='/repo/:owner/:repo/issues' Component={RepoIssues} {...this.state} logoutHandler={this.signOut} exact={true} />
+            <ProtectedRoute path='/repo/:owner/:repo/issues/create' Component={IssueForm} {...this.state} logoutHandler={this.signOut} exact={true} />
+            <ProtectedRoute path='/repo/:owner/:repo/issues/:issue' Component={IssueDetails} {...this.state} logoutHandler={this.signOut} exact={true} />
+            <ProtectedRoute path='/repo/:owner/:repo/issues/:issue/edit' Component={IssueForm} {...this.state} logoutHandler={this.signOut} exact={true} />
+            <PublicRoute path="/login" Component={Login} {...this.state} loginHandler={this.signIn} />
+          </Switch>
+          <ToastContainer />
         </div>
       </Router>
     );
   }
 }
-
-export default App
