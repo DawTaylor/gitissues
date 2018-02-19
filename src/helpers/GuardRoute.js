@@ -9,13 +9,14 @@ export class ProtectedRoute extends Component {
     ) return true
     return false
   }
+
   render() {
     const { Component } = this.props
     return (
       <Route 
-        render={() => {
-          if (this.props.accessToken && this.props.githubUser) return (<Component {...this.props} />)
-          return (<Redirect to={{ pathname: '/login' }} />)
+        render={(props) => {
+          if (this.props.accessToken && this.props.githubUser) return (<Component {...this.props} {...props} />)
+          return (<Redirect to={{ pathname: '/login', state: { from: this.props.location.pathname } }} />)
         }}
       />
     )
@@ -30,13 +31,15 @@ export class PublicRoute extends Component {
     ) return true
     return false
   }
+
   render() {
     const { Component } = this.props
+    const from = this.props.location.state.from || '/'
     return (
       <Route
         render={() => {
           if (!this.props.accessToken || !this.props.githubUser) return (<Component {...this.props} />)
-          return (<Redirect to={{ pathname: "/" }} />)
+          return (<Redirect to={{ pathname: from }} />)
         }}
       />
     )
